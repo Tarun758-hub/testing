@@ -1,37 +1,30 @@
-
-name: FastAPI Docker CI/CD
+name: Run Docker Container
 
 on:
-  push:
+  workflow_dispatch:   # allows manual trigger from Actions tab
+  push:                # also runs when code is pushed
     branches:
-      - demo
+      - main
 
 jobs:
-  build-and-run:
+  run-docker:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # 1. Checkout your repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      # 2. Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t my-app:latest .
 
-    - name: Build Docker image
-      run: |
-        docker build -t demo-fastapi:latest .
+      # 3. Run Docker container
+      - name: Run Docker container
+        run: |
+          docker run --name my-app-container -d -p 8080:8080 my-app:latest
 
-    - name: Run Docker container
-      run: |
-        docker run -d --name demo-fastapi-container -p 8000:8000 demo-fastapi:latest
-
-    - name: Test FastAPI container
-      run: |
-        sleep 5 # wait for the container to start
-        curl -f http://localhost:8000/ || echo "FastAPI container test failed"
-
-    - name: Stop and remove container
-      if: always()
-      run: |
-        docker stop demo-fastapi-container
-        docker rm demo-fastapi-container
+      # 4. Check logs (optional)
+      - name: Show container logs
+        run: docker logs my-app-container
